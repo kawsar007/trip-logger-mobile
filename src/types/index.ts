@@ -18,3 +18,8 @@ export type Trip = {
   time: string;            // HH:MM
   description?: string;
 };
+
+export type DateRange = {
+  from: string;
+  to: string;
+};

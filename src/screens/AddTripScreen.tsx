@@ -11,6 +11,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {
+  SafeAreaView
+} from 'react-native-safe-area-context';
 import { addTrip } from '../db/database';
 import { COLORS } from '../theme/colors';
 import { Trip } from '../types';
@@ -59,99 +62,105 @@ export default function AddTripScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
-    >
-      <ScrollView style={styles.container}>
-        <Text style={styles.title}>Log New Trip</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView style={styles.container}>
+          <Text style={styles.title}>Log New Trip</Text>
 
-        <View style={styles.form}>
-          <Text style={styles.label}>Date</Text>
-          <TextInput
-            style={styles.input}
-            value={trip.tripDate}
-            onChangeText={(v) => handleChange('tripDate', v)}
-            placeholder="YYYY-MM-DD"
-          />
+          <View style={styles.form}>
+            <Text style={styles.label}>Date</Text>
+            <TextInput
+              style={styles.input}
+              value={trip.tripDate}
+              onChangeText={(v) => handleChange('tripDate', v)}
+              placeholder="YYYY-MM-DD"
+            />
 
-          <Text style={styles.label}>Start Destination *</Text>
-          <TextInput
-            style={styles.input}
-            value={trip.startDestination}
-            onChangeText={(v) => handleChange('startDestination', v)}
-            placeholder="Office"
-          />
+            <Text style={styles.label}>Start Destination *</Text>
+            <TextInput
+              style={styles.input}
+              value={trip.startDestination}
+              onChangeText={(v) => handleChange('startDestination', v)}
+              placeholder="Office"
+            />
 
-          <Text style={styles.label}>End Destination *</Text>
-          <TextInput
-            style={styles.input}
-            value={trip.endDestination}
-            onChangeText={(v) => handleChange('endDestination', v)}
-            placeholder="Client Site"
-          />
+            <Text style={styles.label}>End Destination *</Text>
+            <TextInput
+              style={styles.input}
+              value={trip.endDestination}
+              onChangeText={(v) => handleChange('endDestination', v)}
+              placeholder="Client Site"
+            />
 
-          <View style={styles.row}>
-            <View style={{ flex: 1, marginRight: 8 }}>
-              <Text style={styles.label}>Start Postal Code</Text>
-              <TextInput
-                style={styles.input}
-                value={trip.startPostal}
-                onChangeText={(v) => handleChange('startPostal', v)}
-                placeholder="1207"
-                keyboardType="default"
-              />
+            <View style={styles.row}>
+              <View style={{ flex: 1, marginRight: 8 }}>
+                <Text style={styles.label}>Start Postal Code</Text>
+                <TextInput
+                  style={styles.input}
+                  value={trip.startPostal}
+                  onChangeText={(v) => handleChange('startPostal', v)}
+                  placeholder="1207"
+                  keyboardType="default"
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.label}>End Postal Code</Text>
+                <TextInput
+                  style={styles.input}
+                  value={trip.endPostal}
+                  onChangeText={(v) => handleChange('endPostal', v)}
+                  placeholder="1212"
+                  keyboardType="default"
+                />
+              </View>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.label}>End Postal Code</Text>
-              <TextInput
-                style={styles.input}
-                value={trip.endPostal}
-                onChangeText={(v) => handleChange('endPostal', v)}
-                placeholder="1212"
-                keyboardType="default"
-              />
-            </View>
+
+            <Text style={styles.label}>Distance (miles) *</Text>
+            <TextInput
+              style={styles.input}
+              value={trip.distance.toString()}
+              onChangeText={(v) => handleChange('distance', parseFloat(v) || 0)}
+              placeholder="45.5"
+              keyboardType="numeric"
+            />
+
+            <Text style={styles.label}>Time (HH:MM) *</Text>
+            <TextInput
+              style={styles.input}
+              value={trip.time}
+              onChangeText={(v) => handleChange('time', v)}
+              placeholder="02:45"
+              keyboardType="default"
+            />
+
+            <Text style={styles.label}>Description / Notes</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={trip.description}
+              onChangeText={(v) => handleChange('description', v)}
+              placeholder="Meeting with client..."
+              multiline
+              numberOfLines={4}
+            />
+
+            <TouchableOpacity style={styles.button} onPress={handleSave}>
+              <Text style={styles.buttonText}>Save Trip</Text>
+            </TouchableOpacity>
           </View>
-
-          <Text style={styles.label}>Distance (miles) *</Text>
-          <TextInput
-            style={styles.input}
-            value={trip.distance.toString()}
-            onChangeText={(v) => handleChange('distance', parseFloat(v) || 0)}
-            placeholder="45.5"
-            keyboardType="numeric"
-          />
-
-          <Text style={styles.label}>Time (HH:MM) *</Text>
-          <TextInput
-            style={styles.input}
-            value={trip.time}
-            onChangeText={(v) => handleChange('time', v)}
-            placeholder="02:45"
-            keyboardType="default"
-          />
-
-          <Text style={styles.label}>Description / Notes</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={trip.description}
-            onChangeText={(v) => handleChange('description', v)}
-            placeholder="Meeting with client..."
-            multiline
-            numberOfLines={4}
-          />
-
-          <TouchableOpacity style={styles.button} onPress={handleSave}>
-            <Text style={styles.buttonText}>Save Trip</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
   container: { flex: 1, backgroundColor: COLORS.background, padding: 24 },
   title: { fontSize: 28, fontWeight: 'bold', color: COLORS.text, marginTop: 40, marginBottom: 24 },
   form: {

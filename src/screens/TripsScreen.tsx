@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -8,25 +9,43 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { getAllTrips, getProfile } from '../db/database';
+import {
+  SafeAreaView
+} from 'react-native-safe-area-context';
+import DateRangePicker from '../components/DateRangePicker';
+import TripActions from '../components/TripActions';
+import { deleteTrip, getAllTrips, getProfile } from '../db/database';
 import { COLORS } from '../theme/colors';
 import { Profile, Trip } from '../types';
 import { formatDate, minutesToTime, timeToMinutes } from '../utils/format';
 import { exportToPDF } from '../utils/pdf';
 
 export default function TripsScreen() {
+  const navigation = useNavigation();
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [filteredTrips, setFilteredTrips] = useState<Trip[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState<{ from: string; to: string }>({
+    from: '',
+    to: '',
+  });
+  const isFocused = useIsFocused();
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (isFocused) {
+      loadData();
+    }
+  }, [isFocused]);
 
   const loadData = async () => {
     try {
-      const [allTrips, userProfile] = await Promise.all([getAllTrips(), getProfile()]);
+      const [allTrips, userProfile] = await Promise.all([
+        getAllTrips(),
+        getProfile(),
+      ]);
       setTrips(allTrips);
+      setFilteredTrips(allTrips);
       setProfile(userProfile);
     } catch (error) {
       Alert.alert('Error', 'Failed to load trips.');
@@ -35,9 +54,22 @@ export default function TripsScreen() {
     }
   };
 
+  // Filter trips when date range changes
+  useEffect(() => {
+    let result = [...trips];
+    if (dateRange.from) {
+      result = result.filter((t) => t.tripDate >= dateRange.from);
+    }
+    if (dateRange.to) {
+      result = result.filter((t) => t.tripDate <= dateRange.to);
+    }
+
+    setFilteredTrips(result);
+  }, [dateRange, trips]);
+
   const groupTripsByDate = () => {
     const groups: Record<string, Trip[]> = {};
-    trips.forEach((trip) => {
+    filteredTrips.forEach((trip) => {
       if (!groups[trip.tripDate]) groups[trip.tripDate] = [];
       groups[trip.tripDate].push(trip);
     });
@@ -51,38 +83,47 @@ export default function TripsScreen() {
   };
 
   const grandTotals = () => {
-    const totalMinutes = trips.reduce((sum, t) => sum + timeToMinutes(t.time), 0);
-    const totalMiles = trips.reduce((sum, t) => sum + t.distance, 0);
+    const totalMinutes = filteredTrips.reduce((sum, t) => sum + timeToMinutes(t.time), 0);
+    const totalMiles = filteredTrips.reduce((sum, t) => sum + t.distance, 0);
     return { totalMinutes, totalMiles };
   };
+
+  const handleDelete = async (id?: number) => {
+    if (!id) return;
+    try {
+      await deleteTrip(id);
+      await loadData(); // refresh
+      Alert.alert('Success', 'Trip deleted');
+    } catch (err) {
+      Alert.alert('Error', 'Could not delete trip');
+    }
+  };
+
+  // const handleEdit = (trip: Trip) => {
+  //   // Navigate to AddTripScreen with existing trip data
+  //   // We'll pass trip as param
+  //   navigation.navigate('AddTrip', { tripToEdit: trip });
+  // };
 
   const handleExport = async () => {
     if (!profile) {
       Alert.alert('Profile Required', 'Please set up your profile first.');
       return;
     }
-    if (trips.length === 0) {
-      Alert.alert('No Data', 'There are no trips to export.');
+    if (filteredTrips.length === 0) {
+      Alert.alert('No Data', 'No trips to export in the selected range.');
       return;
     }
-    await exportToPDF(profile, trips);
+    await exportToPDF(profile, filteredTrips);
   };
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <Text>Loading trips...</Text>
-      </View>
-    );
-  }
-
-  if (trips.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Ionicons name="car-outline" size={80} color="#ccc" />
-        <Text style={styles.emptyText}>No trips logged yet</Text>
-        <Text style={styles.emptySubText}>Tap "Log Trip" to add your first entry</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.center}>
+          <Text>Loading trips...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -90,88 +131,117 @@ export default function TripsScreen() {
   const { totalMiles: grandMiles, totalMinutes: grandMin } = grandTotals();
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>Trip History</Text>
-        <TouchableOpacity style={styles.exportButton} onPress={handleExport}>
-          <Ionicons name="download-outline" size={20} color="#fff" />
-          <Text style={styles.exportText}>Export PDF</Text>
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container}>
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>Trip History</Text>
+          <TouchableOpacity style={styles.exportButton} onPress={handleExport}>
+            <Ionicons name="download-outline" size={20} color="#fff" />
+            <Text style={styles.exportText}>Export PDF</Text>
+          </TouchableOpacity>
+        </View>
 
-      {Object.keys(grouped)
-        .sort((a, b) => b.localeCompare(a)) // newest first
-        .map((date) => {
-          const dayTrips = grouped[date];
-          const { totalMiles, totalMinutes } = calculateTotals(dayTrips);
+        <DateRangePicker range={dateRange} onChange={setDateRange} />
 
-          return (
-            <View key={date} style={styles.section}>
-              <View style={styles.dateHeader}>
-                <Text style={styles.dateText}>{formatDate(date)}</Text>
-                <Text style={styles.subTotal}>
-                  {totalMiles} miles • {minutesToTime(totalMinutes)}
-                </Text>
-              </View>
+        {filteredTrips.length === 0 && (
+          <Text style={styles.noResults}>No trips found in selected date range</Text>
+        )}
 
-              {dayTrips.map((trip) => (
-                <View key={trip.id} style={styles.tripCard}>
-                  <View style={styles.tripRow}>
-                    <Text style={styles.tripLabel}>From → To:</Text>
-                    <Text style={styles.tripValue}>
-                      {trip.startDestination} → {trip.endDestination}
-                    </Text>
-                  </View>
+        {Object.keys(grouped)
+          .sort((a, b) => b.localeCompare(a))
+          .map((date) => {
+            const dayTrips = grouped[date];
+            const { totalMiles, totalMinutes } = calculateTotals(dayTrips);
 
-                  {(trip.startPostal || trip.endPostal) && (
-                    <View style={styles.tripRow}>
-                      <Text style={styles.tripLabel}>Postal:</Text>
-                      <Text style={styles.tripValue}>
-                        {trip.startPostal || '-'} → {trip.endPostal || '-'}
-                      </Text>
-                    </View>
-                  )}
-
-                  <View style={styles.tripRow}>
-                    <Text style={styles.tripLabel}>Distance:</Text>
-                    <Text style={styles.tripValue}>{trip.distance} miles</Text>
-                  </View>
-
-                  <View style={styles.tripRow}>
-                    <Text style={styles.tripLabel}>Time:</Text>
-                    <Text style={styles.tripValue}>{trip.time}</Text>
-                  </View>
-
-                  {trip.description && (
-                    <View style={styles.tripRow}>
-                      <Text style={styles.tripLabel}>Notes:</Text>
-                      <Text style={styles.tripValue}>{trip.description}</Text>
-                    </View>
-                  )}
+            return (
+              <View key={date} style={styles.section}>
+                <View style={styles.dateHeader}>
+                  <Text style={styles.dateText}>{formatDate(date)}</Text>
+                  <Text style={styles.subTotal}>
+                    {totalMiles} miles • {minutesToTime(totalMinutes)}
+                  </Text>
                 </View>
-              ))}
-            </View>
-          );
-        })}
 
-      <View style={styles.grandTotal}>
-        <Text style={styles.grandLabel}>GRAND TOTAL</Text>
-        <Text style={styles.grandValue}>
-          {grandMiles} miles • {minutesToTime(grandMin)}
-        </Text>
-      </View>
+                {dayTrips.map((trip) => (
+                  <View key={trip.id} style={styles.tripCard}>
+                    <View style={styles.tripHeader}>
+                      <Text style={styles.tripTitle}>
+                        {trip.startDestination} → {trip.endDestination}
+                      </Text>
+                      <TripActions
+                        // onEdit={() => handleEdit(trip)}
+                        onDelete={() => handleDelete(trip.id)}
+                      />
+                    </View>
 
-      <View style={{ height: 80 }} />
-    </ScrollView>
+                    {(trip.startPostal || trip.endPostal) && (
+                      <View style={styles.tripRow}>
+                        <Text style={styles.tripLabel}>Postal:</Text>
+                        <Text style={styles.tripValue}>
+                          {trip.startPostal || '-'} → {trip.endPostal || '-'}
+                        </Text>
+                      </View>
+                    )}
+
+                    <View style={styles.tripRow}>
+                      <Text style={styles.tripLabel}>Distance:</Text>
+                      <Text style={styles.tripValue}>{trip.distance} miles</Text>
+                    </View>
+
+                    <View style={styles.tripRow}>
+                      <Text style={styles.tripLabel}>Time:</Text>
+                      <Text style={styles.tripValue}>{trip.time}</Text>
+                    </View>
+
+                    {trip.description && (
+                      <View style={styles.tripRow}>
+                        <Text style={styles.tripLabel}>Notes:</Text>
+                        <Text style={styles.tripValue}>{trip.description}</Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </View>
+            );
+          })}
+
+        {filteredTrips.length > 0 && (
+          <View style={styles.grandTotal}>
+            <Text style={styles.grandLabel}>GRAND TOTAL (filtered)</Text>
+            <Text style={styles.grandValue}>
+              {grandMiles} miles • {minutesToTime(grandMin)}
+            </Text>
+          </View>
+        )}
+
+        <View style={{ height: 80 }} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background, padding: 16 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
-  emptyText: { fontSize: 20, fontWeight: 'bold', color: '#555', marginTop: 20 },
-  emptySubText: { fontSize: 16, color: '#888', textAlign: 'center', marginTop: 8 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  noResults: {
+    textAlign: 'center',
+    color: '#888',
+    fontSize: 16,
+    marginVertical: 20,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   title: { fontSize: 26, fontWeight: 'bold', color: COLORS.text },
   exportButton: {
     flexDirection: 'row',
@@ -201,6 +271,21 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
+  },
+  tripHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  tripTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    flex: 1,
   },
   tripRow: { flexDirection: 'row', marginBottom: 8 },
   tripLabel: { width: 100, fontWeight: '600', color: '#495057' },
