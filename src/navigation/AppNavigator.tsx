@@ -40,12 +40,14 @@ const MainTabs = () => (
 export default function AppNavigator({ hasProfile }: { hasProfile: boolean }) {
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {hasProfile ? (
-          <Stack.Screen name="Main" component={MainTabs} />
-        ) : (
-          <Stack.Screen name="Setup" component={ProfileSetupScreen} />
-        )}
+      <Stack.Navigator
+        // ✅ Both screens are always registered.
+        // initialRouteName controls which one opens first.
+        initialRouteName={hasProfile ? 'Main' : 'Setup'}
+        screenOptions={{ headerShown: false }}
+      >
+        <Stack.Screen name="Setup" component={ProfileSetupScreen} />
+        <Stack.Screen name="Main" component={MainTabs} />
       </Stack.Navigator>
     </NavigationContainer>
   );

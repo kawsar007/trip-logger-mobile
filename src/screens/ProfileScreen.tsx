@@ -318,6 +318,40 @@ export default function ProfileScreen() {
           </View>
         )}
 
+        {/* <TouchableOpacity
+          style={[styles.button, styles.cancelButton, { marginTop: 24 }]}
+          onPress={() => {
+            Alert.alert('Reset Data', 'Are you sure you want to clear all data? This action cannot be undone.', [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Yes, Clear',
+                style: 'destructive',
+                onPress: async () => {
+                  try {
+                    await clearAllData();
+                    setProfile(null);
+                    setForm({
+                      name: '',
+                      email: '',
+                      designation: '',
+                      phone: '',
+                      company: '',
+                    });
+                    setAvatarUri(null);
+                    setEditing(true);
+                    Alert.alert('Data Cleared', 'All data has been cleared successfully.');
+                  } catch (error) {
+                    Alert.alert('Error', 'Failed to clear data.');
+                  }
+                },
+              },
+            ]);
+          }}
+        >
+          <Ionicons name="trash-outline" size={20} color="#fff" />
+          <Text style={styles.buttonText}>Clear All Data</Text>
+        </TouchableOpacity> */}
+
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>

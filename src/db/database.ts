@@ -96,3 +96,12 @@ export const deleteTrip = async (id: number) => {
   const database = await db;
   await database.runAsync('DELETE FROM trips WHERE id = ?', [id]);
 };
+
+export const clearAllData = async () => {
+  const database = await db;
+
+  await database.execAsync(`
+    DELETE FROM trips; 
+    DELETE FROM profile;
+    `);
+};
