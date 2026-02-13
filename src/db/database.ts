@@ -5,9 +5,9 @@ const db = SQLite.openDatabaseAsync('tripLogger.db');
 
 export const initDB = async () => {
   const database = await db;
-  await database.execAsync(`
-    PRAGMA journal_mode = WAL;
 
+  await database.execAsync(`PRAGMA journal_mode = WAL;`);
+  await database.execAsync(`
     CREATE TABLE IF NOT EXISTS profile (
       id INTEGER PRIMARY KEY NOT NULL,
       name TEXT NOT NULL,
@@ -29,6 +29,24 @@ export const initDB = async () => {
       description TEXT
     );
   `);
+  try {
+    await database.execAsync(`
+      ALTER TABLE trips ADD COLUMN startTravelTime TEXT;
+    `);
+    console.log('Added column: startTravelTime');
+  } catch (e) {
+    // Ignore if column already exists (error code is usually "duplicate column name")
+    console.log('startTravelTime column already exists or other error:', e);
+  }
+
+  try {
+    await database.execAsync(`
+      ALTER TABLE trips ADD COLUMN endTravelTime TEXT;
+    `);
+    console.log('Added column: endTravelTime');
+  } catch (e) {
+    console.log('endTravelTime column already exists or other error:', e);
+  }
 };
 
 export const getProfile = async (): Promise<Profile | null> => {
@@ -48,8 +66,8 @@ export const saveProfile = async (profile: Profile) => {
 export const addTrip = async (trip: Trip) => {
   const database = await db;
   await database.runAsync(
-    `INSERT INTO trips (tripDate, startDestination, endDestination, startPostal, endPostal, distance, time, description)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO trips (tripDate, startDestination, endDestination, startPostal, endPostal, distance, time, description, startTravelTime, endTravelTime)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       trip.tripDate,
       trip.startDestination,
@@ -59,6 +77,8 @@ export const addTrip = async (trip: Trip) => {
       trip.distance,
       trip.time,
       trip.description || '',
+      trip.startTravelTime || null,
+      trip.endTravelTime || null,
     ]
   );
 };
@@ -66,18 +86,33 @@ export const addTrip = async (trip: Trip) => {
 export const getAllTrips = async (): Promise<Trip[]> => {
   const database = await db;
   return await database.getAllAsync(
-    `SELECT * FROM trips ORDER BY tripDate DESC, time ASC, id DESC`
+    `SELECT 
+      id, tripDate, startDestination, endDestination, startPostal, endPostal,
+      distance, time, description, startTravelTime, endTravelTime
+     FROM trips 
+     ORDER BY tripDate DESC, startTravelTime ASC, id DESC`
   );
 };
 
 // export const updateTrip = async (trip: Trip) => {
-//   if (!trip.id) throw new Error('Trip ID is required for update');
+//   if (!trip.id) {
+//     throw new Error('Trip ID is required for update');
+//   }
+
 //   const database = await db;
 //   await database.runAsync(
-//     `UPDATE trips SET 
-//       tripDate = ?, startDestination = ?, endDestination = ?, 
-//       startPostal = ?, endPostal = ?, distance = ?, time = ?, description = ?
-//      WHERE id = ?`,
+//     `UPDATE trips SET
+//       tripDate = ?,
+//       startDestination = ?,
+//       endDestination = ?,
+//       startPostal = ?,
+//       endPostal = ?,
+//       distance = ?,
+//       time = ?,
+//       description = ?,
+//       startTravelTime = ?,
+//       endTravelTime = ?
+//     WHERE id = ?`,
 //     [
 //       trip.tripDate,
 //       trip.startDestination,
@@ -87,6 +122,8 @@ export const getAllTrips = async (): Promise<Trip[]> => {
 //       trip.distance,
 //       trip.time,
 //       trip.description || '',
+//       trip.startTravelTime || null,
+//       trip.endTravelTime || null,
 //       trip.id,
 //     ]
 //   );

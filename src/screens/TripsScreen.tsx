@@ -317,6 +317,13 @@ export default function TripsScreen() {
                       </View>
 
                       <View style={styles.tripRow}>
+                        <Text style={styles.tripLabel}>Travel Time:</Text>
+                        <Text style={styles.tripValue}>
+                          {trip.startTravelTime || '—'} → {trip.endTravelTime || '—'} ({trip.time})
+                        </Text>
+                      </View>
+
+                      <View style={styles.tripRow}>
                         <Ionicons name="time-outline" size={16} color="#666" />
                         <Text style={styles.tripLabel}>Duration:</Text>
                         <Text style={styles.tripValue}>{trip.time}</Text>

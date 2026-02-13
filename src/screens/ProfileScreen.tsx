@@ -12,7 +12,7 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getProfile, saveProfile } from '../db/database';
+import { clearAllData, getProfile, saveProfile } from '../db/database';
 import { COLORS } from '../theme/colors';
 import { Profile } from '../types';
 
@@ -318,7 +318,7 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* <TouchableOpacity
+        <TouchableOpacity
           style={[styles.button, styles.cancelButton, { marginTop: 24 }]}
           onPress={() => {
             Alert.alert('Reset Data', 'Are you sure you want to clear all data? This action cannot be undone.', [
@@ -350,7 +350,7 @@ export default function ProfileScreen() {
         >
           <Ionicons name="trash-outline" size={20} color="#fff" />
           <Text style={styles.buttonText}>Clear All Data</Text>
-        </TouchableOpacity> */}
+        </TouchableOpacity>
 
         <View style={{ height: 40 }} />
       </ScrollView>

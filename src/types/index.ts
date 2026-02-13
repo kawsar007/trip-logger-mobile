@@ -18,8 +18,8 @@ export type Trip = {
   time: string;            // HH:MM
   description?: string;
 
-  startTravelTime?: string;   // "HH:MM"
-  endTravelTime?: string;     // "HH:MM"
+  startTravelTime?: string;
+  endTravelTime?: string;
 };
 
 export type DateRange = {

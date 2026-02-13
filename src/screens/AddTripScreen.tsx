@@ -26,6 +26,8 @@ export default function AddTripScreen() {
     startPostal: '',
     endPostal: '',
     distance: 0,
+    // startTravelTime: '',
+    // endTravelTime: '',
     time: '',
     description: '',
   });
