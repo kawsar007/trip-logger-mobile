@@ -69,3 +69,39 @@ export const getAllTrips = async (): Promise<Trip[]> => {
     `SELECT * FROM trips ORDER BY tripDate DESC, id DESC`
   );
 };
+
+// export const updateTrip = async (trip: Trip) => {
+//   if (!trip.id) throw new Error('Trip ID is required for update');
+//   const database = await db;
+//   await database.runAsync(
+//     `UPDATE trips SET 
+//       tripDate = ?, startDestination = ?, endDestination = ?, 
+//       startPostal = ?, endPostal = ?, distance = ?, time = ?, description = ?
+//      WHERE id = ?`,
+//     [
+//       trip.tripDate,
+//       trip.startDestination,
+//       trip.endDestination,
+//       trip.startPostal || '',
+//       trip.endPostal || '',
+//       trip.distance,
+//       trip.time,
+//       trip.description || '',
+//       trip.id,
+//     ]
+//   );
+// };
+
+export const deleteTrip = async (id: number) => {
+  const database = await db;
+  await database.runAsync('DELETE FROM trips WHERE id = ?', [id]);
+};
+
+export const clearAllData = async () => {
+  const database = await db;
+
+  await database.execAsync(`
+    DELETE FROM trips; 
+    DELETE FROM profile;
+    `);
+};

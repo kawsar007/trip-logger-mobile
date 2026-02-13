@@ -12,6 +12,8 @@ import { COLORS } from '../theme/colors';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+const AddTripScreenWrapper = (props: any) => <AddTripScreen {...props} />;
+
 const MainTabs = () => (
   <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: COLORS.primary }}>
     <Tab.Screen
@@ -21,8 +23,11 @@ const MainTabs = () => (
     />
     <Tab.Screen
       name="AddTrip"
-      component={AddTripScreen}
-      options={{ tabBarLabel: 'Log Trip', tabBarIcon: ({ color }) => <Ionicons name="add-circle" size={24} color={color} /> }}
+      component={AddTripScreenWrapper}
+      options={{
+        tabBarLabel: 'Log Trip',
+        tabBarIcon: ({ color }) => <Ionicons name="add-circle" size={24} color={color} />,
+      }}
     />
     <Tab.Screen
       name="ProfileTab"
@@ -35,12 +40,14 @@ const MainTabs = () => (
 export default function AppNavigator({ hasProfile }: { hasProfile: boolean }) {
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {hasProfile ? (
-          <Stack.Screen name="Main" component={MainTabs} />
-        ) : (
-          <Stack.Screen name="Setup" component={ProfileSetupScreen} />
-        )}
+      <Stack.Navigator
+        // ✅ Both screens are always registered.
+        // initialRouteName controls which one opens first.
+        initialRouteName={hasProfile ? 'Main' : 'Setup'}
+        screenOptions={{ headerShown: false }}
+      >
+        <Stack.Screen name="Setup" component={ProfileSetupScreen} />
+        <Stack.Screen name="Main" component={MainTabs} />
       </Stack.Navigator>
     </NavigationContainer>
   );

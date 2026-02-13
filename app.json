@@ -4,7 +4,7 @@
     "slug": "trip-logger",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/gps-tracking.jpg",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -13,7 +13,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kawsar007.triplogger",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,13 +25,20 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.kawsar007.triplogger"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-sqlite"
-    ]
+      "expo-sqlite",
+      "@react-native-community/datetimepicker"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "21145ddd-5194-4343-a82c-e62f004a605d"
+      }
+    }
   }
 }
