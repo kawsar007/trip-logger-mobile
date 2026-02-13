@@ -123,7 +123,7 @@ export default function TripsScreen() {
     setShowFromPicker(Platform.OS === 'ios');
     if (selected) {
       setSelectedFromDate(selected);
-      const formattedDate = selected.toISOString().split('T')[0];
+      const formattedDate = selected.toLocaleDateString('en-CA');
       setDateRange((prev) => ({ ...prev, from: formattedDate }));
     }
   };
@@ -132,7 +132,7 @@ export default function TripsScreen() {
     setShowToPicker(Platform.OS === 'ios');
     if (selected) {
       setSelectedToDate(selected);
-      const formattedDate = selected.toISOString().split('T')[0];
+      const formattedDate = selected.toLocaleDateString('en-CA');
       setDateRange((prev) => ({ ...prev, to: formattedDate }));
     }
   };

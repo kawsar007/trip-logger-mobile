@@ -20,7 +20,8 @@ import { Trip } from '../types';
 export default function AddTripScreen() {
   const navigation = useNavigation();
   const [trip, setTrip] = useState<Trip>({
-    tripDate: new Date().toISOString().split('T')[0],
+    // tripDate: new Date().toISOString().split('T')[0],
+    tripDate: new Date().toLocaleDateString('en-CA'),
     startDestination: '',
     endDestination: '',
     startPostal: '',
@@ -53,13 +54,6 @@ export default function AddTripScreen() {
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
-  // const parseTimeToDate = (timeStr?: string): Date => {
-  //   if (!timeStr) return new Date(0, 0, 0, 0, 0);
-  //   const [h, m] = timeStr.split(':').map(Number);
-  //   const date = new Date();
-  //   date.setHours(h, m, 0, 0);
-  //   return date;
-  // }
   const parseTimeToDate = (timeStr?: string): Date => {
     const date = new Date(1970, 0, 1, 0, 0, 0, 0);
     if (timeStr) {
@@ -77,9 +71,6 @@ export default function AddTripScreen() {
     const m = date.getMinutes().toString().padStart(2, '0');
     return `${h}:${m}`;
   };
-  // const formatDateToTime = (date: Date): string => {
-  //   return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-  // };
 
   // Compute difference in minutes → "HH:MM"
   const computeTravelTime = (): string => {
@@ -128,7 +119,7 @@ export default function AddTripScreen() {
 
   const resetForm = () => {
     setTrip({
-      tripDate: new Date().toISOString().split('T')[0],
+      tripDate: new Date().toLocaleDateString('en-CA'),
       startDestination: '',
       endDestination: '',
       startPostal: '',
@@ -219,16 +210,12 @@ export default function AddTripScreen() {
     setShowDatePicker(Platform.OS === 'ios');
     if (selected) {
       setSelectedDate(selected);
-      const formattedDate = selected.toISOString().split('T')[0];
+      const formattedDate = selected.toLocaleDateString('en-CA');
       handleChange('tripDate', formattedDate);
     }
   };
 
   const handleSave = async () => {
-    // if (!trip.startDestination || !trip.endDestination || trip.distance <= 0 || !trip.time) {
-    //   Alert.alert('Missing Fields', 'Please fill in all required fields (*)');
-    //   return;
-    // }
     if (!trip.startDestination || !trip.endDestination || trip.distance <= 0 ||
       !trip.startTravelTime || !trip.endTravelTime || !trip.time) {
       Alert.alert('Missing Fields', 'Please fill all required fields including both times.');
@@ -452,20 +439,6 @@ export default function AddTripScreen() {
                 </View>
               )}
             </View>
-            {/* <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                <Text style={styles.labelIcon}>⏱️ </Text>
-                Travel Time <Text style={styles.required}>*</Text>
-              </Text>
-              <TouchableOpacity
-                style={styles.input}
-                onPress={() => setShowTimePicker(true)}
-              >
-                <Text style={trip.time ? styles.inputText : styles.placeholderText}>
-                  {trip.time || 'Select time (HH:MM)'}
-                </Text>
-              </TouchableOpacity>
-            </View> */}
 
             {showTimePicker && (
               <DateTimePicker
