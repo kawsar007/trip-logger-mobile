@@ -17,6 +17,9 @@ export type Trip = {
   distance: number;
   time: string;            // HH:MM
   description?: string;
+
+  startTravelTime?: string;   // "HH:MM"
+  endTravelTime?: string;     // "HH:MM"
 };
 
 export type DateRange = {

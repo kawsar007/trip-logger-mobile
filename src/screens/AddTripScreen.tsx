@@ -48,6 +48,82 @@ export default function AddTripScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+
+  // const parseTimeToDate = (timeStr?: string): Date => {
+  //   if (!timeStr) return new Date(0, 0, 0, 0, 0);
+  //   const [h, m] = timeStr.split(':').map(Number);
+  //   const date = new Date();
+  //   date.setHours(h, m, 0, 0);
+  //   return date;
+  // }
+  const parseTimeToDate = (timeStr?: string): Date => {
+    const date = new Date(1970, 0, 1, 0, 0, 0, 0);
+    if (timeStr) {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      if (!isNaN(hours) && !isNaN(minutes)) {
+        date.setHours(hours, minutes, 0, 0);
+      }
+    }
+    return date;
+  };
+
+  // Helper: format Date back to "HH:MM"
+  const formatDateToTime = (date: Date): string => {
+    const h = date.getHours().toString().padStart(2, '0');
+    const m = date.getMinutes().toString().padStart(2, '0');
+    return `${h}:${m}`;
+  };
+  // const formatDateToTime = (date: Date): string => {
+  //   return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  // };
+
+  // Compute difference in minutes → "HH:MM"
+  const computeTravelTime = (): string => {
+    if (!trip.startTravelTime || !trip.endTravelTime) return '';
+
+    const start = parseTimeToDate(trip.startTravelTime);
+    const end = parseTimeToDate(trip.endTravelTime);
+
+    let diffMs = end.getTime() - start.getTime();
+    if (diffMs < 0) {
+      // Optional: handle overnight (add 24h)
+      diffMs += 24 * 60 * 60 * 1000;
+    }
+
+    if (diffMs < 0) return ''; // still invalid → don't show nonsense
+
+    const diffMinutes = Math.floor(diffMs / 60000);
+    const hours = Math.floor(diffMinutes / 60);
+    const minutes = diffMinutes % 60;
+
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  };
+
+  // When picker changes
+  const onStartTimeChange = (event: any, selectedDate?: Date) => {
+    setShowStartPicker(Platform.OS === 'ios'); // iOS keeps open
+    if (selectedDate) {
+      const timeStr = formatDateToTime(selectedDate);
+      setTrip(prev => ({ ...prev, startTravelTime: timeStr }));
+    }
+  };
+
+  const onEndTimeChange = (event: any, selectedDate?: Date) => {
+    setShowEndPicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      const timeStr = formatDateToTime(selectedDate);
+      setTrip(prev => ({ ...prev, endTravelTime: timeStr }));
+    }
+  };
+
+  // In useEffect or when start/end change → update computed time
+  useEffect(() => {
+    const computed = computeTravelTime();
+    setTrip(prev => ({ ...prev, time: computed || '' }));
+  }, [trip.startTravelTime, trip.endTravelTime]);
+
   const resetForm = () => {
     setTrip({
       tripDate: new Date().toISOString().split('T')[0],
@@ -147,8 +223,13 @@ export default function AddTripScreen() {
   };
 
   const handleSave = async () => {
-    if (!trip.startDestination || !trip.endDestination || trip.distance <= 0 || !trip.time) {
-      Alert.alert('Missing Fields', 'Please fill in all required fields (*)');
+    // if (!trip.startDestination || !trip.endDestination || trip.distance <= 0 || !trip.time) {
+    //   Alert.alert('Missing Fields', 'Please fill in all required fields (*)');
+    //   return;
+    // }
+    if (!trip.startDestination || !trip.endDestination || trip.distance <= 0 ||
+      !trip.startTravelTime || !trip.endTravelTime || !trip.time) {
+      Alert.alert('Missing Fields', 'Please fill all required fields including both times.');
       return;
     }
 
@@ -320,7 +401,56 @@ export default function AddTripScreen() {
             </View>
 
             {/* Time Field with Picker */}
-            <View style={styles.inputGroup}>
+            <View>
+              <Text style={styles.label}>Start Travel Time *</Text>
+              <TouchableOpacity
+                style={styles.timeButton}
+                onPress={() => setShowStartPicker(true)}
+              >
+                <Text style={styles.timeText}>
+                  {trip.startTravelTime || 'Select start time'}
+                </Text>
+              </TouchableOpacity>
+
+              {showStartPicker && (
+                <DateTimePicker
+                  value={parseTimeToDate(trip.startTravelTime)}
+                  mode="time"
+                  is24Hour={true}
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={onStartTimeChange}
+                />
+              )}
+
+              <Text style={styles.label}>End Travel Time *</Text>
+              <TouchableOpacity
+                style={styles.timeButton}
+                onPress={() => setShowEndPicker(true)}
+              >
+                <Text style={styles.timeText}>
+                  {trip.endTravelTime || 'Select end time'}
+                </Text>
+              </TouchableOpacity>
+
+              {showEndPicker && (
+                <DateTimePicker
+                  value={parseTimeToDate(trip.endTravelTime)}
+                  mode="time"
+                  is24Hour={true}
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={onEndTimeChange}
+                />
+              )}
+
+              {/* Show computed time (read-only) */}
+              {trip.time && (
+                <View style={{ marginTop: 12 }}>
+                  <Text style={styles.label}>Calculated Travel Time</Text>
+                  <Text style={styles.computedTime}>{trip.time}</Text>
+                </View>
+              )}
+            </View>
+            {/* <View style={styles.inputGroup}>
               <Text style={styles.label}>
                 <Text style={styles.labelIcon}>⏱️ </Text>
                 Travel Time <Text style={styles.required}>*</Text>
@@ -333,7 +463,7 @@ export default function AddTripScreen() {
                   {trip.time || 'Select time (HH:MM)'}
                 </Text>
               </TouchableOpacity>
-            </View>
+            </View> */}
 
             {showTimePicker && (
               <DateTimePicker
@@ -508,6 +638,28 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: COLORS.text,
     fontWeight: '500',
+  },
+
+  timeButton: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#fff',
+    marginBottom: 8,
+  },
+  timeText: {
+    fontSize: 16,
+    color: COLORS.text
+  },
+  computedTime: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.primary,
+    padding: 12,
+    backgroundColor: '#f0f8ff',
+    borderRadius: 8,
+    textAlign: 'center',
   },
 });
 

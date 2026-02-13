@@ -1,6 +1,6 @@
 {
-  "name": "trip-logger",
-  "version": "1.0.0",
+  "name": "reham",
+  "version": "1.0.1",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
