@@ -66,7 +66,7 @@ export const addTrip = async (trip: Trip) => {
 export const getAllTrips = async (): Promise<Trip[]> => {
   const database = await db;
   return await database.getAllAsync(
-    `SELECT * FROM trips ORDER BY tripDate DESC, id DESC`
+    `SELECT * FROM trips ORDER BY tripDate DESC, time ASC, id DESC`
   );
 };
 

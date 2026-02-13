@@ -416,7 +416,7 @@ export default function AddTripScreen() {
                 <DateTimePicker
                   value={parseTimeToDate(trip.startTravelTime)}
                   mode="time"
-                  is24Hour={true}
+                  is24Hour={false}
                   display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                   onChange={onStartTimeChange}
                 />
@@ -436,7 +436,7 @@ export default function AddTripScreen() {
                 <DateTimePicker
                   value={parseTimeToDate(trip.endTravelTime)}
                   mode="time"
-                  is24Hour={true}
+                  is24Hour={false}
                   display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                   onChange={onEndTimeChange}
                 />
