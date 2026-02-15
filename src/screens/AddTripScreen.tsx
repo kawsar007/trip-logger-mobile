@@ -54,6 +54,10 @@ export default function AddTripScreen() {
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
+  const formatPostalCode = (text: string): string => {
+    return text.toUpperCase();
+  };
+
   const parseTimeToDate = (timeStr?: string): Date => {
     const date = new Date(1970, 0, 1, 0, 0, 0, 0);
     if (timeStr) {
@@ -351,10 +355,11 @@ export default function AddTripScreen() {
                 <TextInput
                   style={styles.input}
                   value={trip.startPostal}
-                  onChangeText={(v) => handleChange('startPostal', v)}
-                  placeholder="1207"
+                  onChangeText={(v) => handleChange('startPostal', formatPostalCode(v))}
+                  placeholder="CF12 5LD"
                   placeholderTextColor={COLORS.textSecondary || '#999'}
                   keyboardType="default"
+                  autoCapitalize="characters"
                 />
               </View>
               <View style={styles.halfInput}>
@@ -365,10 +370,11 @@ export default function AddTripScreen() {
                 <TextInput
                   style={styles.input}
                   value={trip.endPostal}
-                  onChangeText={(v) => handleChange('endPostal', v)}
-                  placeholder="1212"
+                  onChangeText={(v) => handleChange('endPostal', formatPostalCode(v))}
+                  placeholder="CF12 8LD"
                   placeholderTextColor={COLORS.textSecondary || '#999'}
                   keyboardType="default"
+                  autoCapitalize="characters"
                 />
               </View>
             </View>
@@ -382,7 +388,7 @@ export default function AddTripScreen() {
               <TextInput
                 style={styles.input}
                 value={trip.distance > 0 ? trip.distance.toString() : ''}
-                onChangeText={(v) => handleChange('distance', parseFloat(v) || 0)}
+                onChangeText={(v) => handleChange('distance', v || 0)}
                 placeholder="45.5"
                 placeholderTextColor={COLORS.textSecondary || '#999'}
                 keyboardType="decimal-pad"
