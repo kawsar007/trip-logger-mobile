@@ -26,7 +26,7 @@ export default function AddTripScreen() {
     endDestination: '',
     startPostal: '',
     endPostal: '',
-    distance: 0,
+    distance: '',
     // startTravelTime: '',
     // endTravelTime: '',
     time: '',
@@ -128,7 +128,7 @@ export default function AddTripScreen() {
       endDestination: '',
       startPostal: '',
       endPostal: '',
-      distance: 0,
+      distance: '',
       time: '',
       description: '',
     });
@@ -220,14 +220,16 @@ export default function AddTripScreen() {
   };
 
   const handleSave = async () => {
-    if (!trip.startDestination || !trip.endDestination || trip.distance <= 0 ||
+    const distanceNum = parseFloat(trip.distance.toString());
+
+    if (!trip.startDestination || !trip.endDestination || isNaN(distanceNum) || distanceNum <= 0 ||
       !trip.startTravelTime || !trip.endTravelTime || !trip.time) {
       Alert.alert('Missing Fields', 'Please fill all required fields including both times.');
       return;
     }
 
     try {
-      await addTrip(trip);
+      await addTrip({ ...trip, distance: distanceNum });
       resetForm();
       Alert.alert('Success', 'Trip logged successfully!', [
         { text: 'OK', onPress: () => navigation.goBack() },
@@ -387,8 +389,8 @@ export default function AddTripScreen() {
               </Text>
               <TextInput
                 style={styles.input}
-                value={trip.distance > 0 ? trip.distance.toString() : ''}
-                onChangeText={(v) => handleChange('distance', v || 0)}
+                value={trip.distance.toString()}
+                onChangeText={(v) => handleChange('distance', v)}
                 placeholder="45.5"
                 placeholderTextColor={COLORS.textSecondary || '#999'}
                 keyboardType="decimal-pad"
@@ -397,7 +399,7 @@ export default function AddTripScreen() {
 
             {/* Time Field with Picker */}
             <View>
-              <Text style={styles.label}>Start Travel Time *</Text>
+              <Text style={styles.label}>Start Time *</Text>
               <TouchableOpacity
                 style={styles.timeButton}
                 onPress={() => setShowStartPicker(true)}
@@ -417,7 +419,7 @@ export default function AddTripScreen() {
                 />
               )}
 
-              <Text style={styles.label}>End Travel Time *</Text>
+              <Text style={styles.label}>End Time *</Text>
               <TouchableOpacity
                 style={styles.timeButton}
                 onPress={() => setShowEndPicker(true)}

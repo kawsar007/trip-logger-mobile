@@ -14,7 +14,7 @@ export type Trip = {
   endDestination: string;
   startPostal?: string;
   endPostal?: string;
-  distance: number;
+  distance: number | string;  // Allow string for input, but should be number in storage
   time: string;            // HH:MM
   description?: string;
 

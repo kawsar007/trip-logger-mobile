@@ -351,12 +351,12 @@ export default function TripsScreen() {
             <View style={styles.grandTotalDetails}>
               <View style={styles.grandTotalItem}>
                 <Text style={styles.grandTotalLabel}>Distance</Text>
-                <Text style={styles.grandValue}>{grandMiles.toFixed(1)} mi</Text>
+                <Text style={styles.grandValue}>{grandMiles.toFixed(1)} Miles</Text>
               </View>
               <View style={styles.grandTotalDivider} />
               <View style={styles.grandTotalItem}>
                 <Text style={styles.grandTotalLabel}>Time</Text>
-                <Text style={styles.grandValue}>{minutesToTime(grandMin)}</Text>
+                <Text style={styles.grandValue}>{minutesToTime(grandMin)} Hours</Text>
               </View>
             </View>
           </View>

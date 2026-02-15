@@ -85,15 +85,11 @@ export const exportToPDF = async (profile: Profile, trips: Trip[]) => {
           ${tripRows}
           <tr>
             <td colspan="8" class="grand-total">
-              GRAND TOTAL: ${grandDistance} miles — ${minutesToTime(grandMinutes)}
+              GRAND TOTAL: ${grandDistance} Miles — ${minutesToTime(grandMinutes)} Hours
             </td>
           </tr>
         </tbody>
       </table>
-
-      <p style="font-size: 12px; color: #666; margin-top: 20px;">
-        * Times are in 24-hour format (HH:MM). Missing times shown as '-'.
-      </p>
     </body>
   </html>`;
 
