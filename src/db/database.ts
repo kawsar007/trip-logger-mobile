@@ -94,40 +94,39 @@ export const getAllTrips = async (): Promise<Trip[]> => {
   );
 };
 
-// export const updateTrip = async (trip: Trip) => {
-//   if (!trip.id) {
-//     throw new Error('Trip ID is required for update');
-//   }
+export const updateTrip = async (id: number, trip: Trip) => {
+  const database = await db;
+  await database.runAsync(
+    `UPDATE trips 
+     SET tripDate = ?, startDestination = ?, endDestination = ?, 
+         startPostal = ?, endPostal = ?, distance = ?, time = ?, 
+         description = ?, startTravelTime = ?, endTravelTime = ?
+     WHERE id = ?`,
+    [
+      trip.tripDate,
+      trip.startDestination,
+      trip.endDestination,
+      trip.startPostal || '',
+      trip.endPostal || '',
+      trip.distance,
+      trip.time,
+      trip.description || '',
+      trip.startTravelTime || null,
+      trip.endTravelTime || null,
+      id,
+    ]
+  );
+};
 
-//   const database = await db;
-//   await database.runAsync(
-//     `UPDATE trips SET
-//       tripDate = ?,
-//       startDestination = ?,
-//       endDestination = ?,
-//       startPostal = ?,
-//       endPostal = ?,
-//       distance = ?,
-//       time = ?,
-//       description = ?,
-//       startTravelTime = ?,
-//       endTravelTime = ?
-//     WHERE id = ?`,
-//     [
-//       trip.tripDate,
-//       trip.startDestination,
-//       trip.endDestination,
-//       trip.startPostal || '',
-//       trip.endPostal || '',
-//       trip.distance,
-//       trip.time,
-//       trip.description || '',
-//       trip.startTravelTime || null,
-//       trip.endTravelTime || null,
-//       trip.id,
-//     ]
-//   );
-// };
+export const getTripById = async (id: number): Promise<Trip | null> => {
+  const database = await db;
+  return await database.getFirstAsync(
+    `SELECT id, tripDate, startDestination, endDestination, startPostal, endPostal,
+            distance, time, description, startTravelTime, endTravelTime
+     FROM trips WHERE id = ?`,
+    [id]
+  );
+};
 
 export const deleteTrip = async (id: number) => {
   const database = await db;

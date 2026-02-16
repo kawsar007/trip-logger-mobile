@@ -18,7 +18,7 @@ import TripActions from '../components/TripActions';
 import { deleteTrip, getAllTrips, getProfile } from '../db/database';
 import { COLORS } from '../theme/colors';
 import { Profile, Trip } from '../types';
-import { formatDate, minutesToTime, timeToMinutes } from '../utils/format';
+import { formatDate, formatTravelTime, minutesToTime, timeToMinutes } from '../utils/format';
 import { exportToPDF } from '../utils/pdf';
 
 export default function TripsScreen() {
@@ -295,6 +295,7 @@ export default function TripsScreen() {
                         </Text>
                       </View>
                       <TripActions
+                        onEdit={() => navigation.navigate('AddTrip', { tripId: trip.id })}
                         onDelete={() => handleDelete(trip.id)}
                       />
                     </View>
@@ -316,10 +317,17 @@ export default function TripsScreen() {
                         <Text style={styles.tripValue}>{trip.distance} miles</Text>
                       </View>
 
+                      {/* <View style={styles.tripRow}>
+                        <Text style={styles.tripLabel}>Travel Time:</Text>
+                        <Text style={styles.tripValue}>
+                          {trip.startTravelTime || '—'} → {trip.endTravelTime || '—'} ({trip.time} hours)
+                        </Text>
+                      </View> */}
                       <View style={styles.tripRow}>
                         <Text style={styles.tripLabel}>Travel Time:</Text>
                         <Text style={styles.tripValue}>
-                          {trip.startTravelTime || '—'} → {trip.endTravelTime || '—'} ({trip.time})
+                          {trip.startTravelTime || '—'} → {trip.endTravelTime || '—'} (
+                          {formatTravelTime(trip.time)})
                         </Text>
                       </View>
 

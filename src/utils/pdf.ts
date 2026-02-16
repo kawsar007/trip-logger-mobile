@@ -1,7 +1,7 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { Profile, Trip } from '../types';
-import { formatDate, minutesToTime, timeToMinutes } from './format';
+import { formatDate, formatTravelTime, minutesToTime, timeToMinutes } from './format';
 
 export const exportToPDF = async (profile: Profile, trips: Trip[]) => {
   // Group trips by date
@@ -42,7 +42,7 @@ export const exportToPDF = async (profile: Profile, trips: Trip[]) => {
             <td>${t.distance}</td>
             <td>${t.startTravelTime || '-'}</td>
             <td>${t.endTravelTime || '-'}</td>
-            <td>${t.time}</td>
+            <td>${formatTravelTime(t.time)}</td>
             <td>${t.description || '-'}</td>
           </tr>`;
       });

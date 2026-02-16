@@ -1,5 +1,5 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
@@ -13,12 +13,15 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { addTrip, getAllTrips } from '../db/database';
+import { addTrip, getAllTrips, getTripById, updateTrip } from '../db/database';
 import { COLORS } from '../theme/colors';
 import { Trip } from '../types';
 
 export default function AddTripScreen() {
   const navigation = useNavigation();
+  const route = useRoute();
+  const tripId = (route.params as any)?.tripId; // If passed, we're editing an existing trip
+  const isEditMode = !!tripId;
   const [trip, setTrip] = useState<Trip>({
     // tripDate: new Date().toISOString().split('T')[0],
     tripDate: new Date().toLocaleDateString('en-CA'),
@@ -27,8 +30,8 @@ export default function AddTripScreen() {
     startPostal: '',
     endPostal: '',
     distance: '',
-    // startTravelTime: '',
-    // endTravelTime: '',
+    startTravelTime: '',
+    endTravelTime: '',
     time: '',
     description: '',
   });
@@ -142,12 +145,46 @@ export default function AddTripScreen() {
   }, []);
 
   // Reset form when screen comes into focus (navigating back to it)
+  // Single useFocusEffect to handle both scenarios
   useFocusEffect(
     useCallback(() => {
-      resetForm();
+      if (isEditMode && tripId) {
+        loadTripForEdit(tripId);
+      } else {
+        resetForm();
+      }
       loadDestinations();
-    }, [])
+    }, [tripId, isEditMode])
   );
+
+  useEffect(() => {
+    if (isEditMode && tripId) {
+      loadTripForEdit(tripId);
+    }
+  }, [tripId]);
+
+  const loadTripForEdit = async (id: number) => {
+    try {
+      const tripData = await getTripById(id);
+      if (tripData) {
+        setTrip(tripData);
+        // Set date picker state
+        setSelectedDate(new Date(tripData.tripDate));
+        // Set time picker states if needed
+        if (tripData.startTravelTime) {
+          // Parse and set start time
+          setSelectedTime(parseTimeToDate(tripData.startTravelTime));
+        }
+        // if (tripData.endTravelTime) {
+        //   // Parse and set end time
+        // }
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to load trip data');
+      navigation.goBack();
+    }
+  };
+
 
   const loadDestinations = async () => {
     try {
@@ -222,20 +259,27 @@ export default function AddTripScreen() {
   const handleSave = async () => {
     const distanceNum = parseFloat(trip.distance.toString());
 
-    if (!trip.startDestination || !trip.endDestination || isNaN(distanceNum) || distanceNum <= 0 ||
-      !trip.startTravelTime || !trip.endTravelTime || !trip.time) {
+    if (!trip.startDestination || !trip.endDestination || isNaN(distanceNum) ||
+      distanceNum <= 0 || !trip.startTravelTime || !trip.endTravelTime || !trip.time) {
       Alert.alert('Missing Fields', 'Please fill all required fields including both times.');
       return;
     }
 
     try {
-      await addTrip({ ...trip, distance: distanceNum });
-      resetForm();
-      Alert.alert('Success', 'Trip logged successfully!', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      if (isEditMode && tripId) {
+        await updateTrip(tripId, { ...trip, distance: distanceNum });
+        Alert.alert('Success', 'Trip updated successfully!', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      } else {
+        await addTrip({ ...trip, distance: distanceNum });
+        resetForm();
+        Alert.alert('Success', 'Trip logged successfully!', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to save trip. Please try again.');
+      Alert.alert('Error', `Failed to ${isEditMode ? 'update' : 'save'} trip. Please try again.`);
     }
   };
 
@@ -251,8 +295,12 @@ export default function AddTripScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
-            <Text style={styles.title}>Log New Trip</Text>
-            <Text style={styles.subtitle}>Record your journey details</Text>
+            <Text style={styles.title}>
+              {isEditMode ? 'Edit Trip' : 'Log New Trip'}
+            </Text>
+            <Text style={styles.subtitle}>
+              {isEditMode ? 'Update your existing trip details' : 'Record your new trip details'}
+            </Text>
           </View>
 
           <View style={styles.form}>
@@ -482,7 +530,9 @@ export default function AddTripScreen() {
               onPress={handleSave}
               activeOpacity={0.8}
             >
-              <Text style={styles.buttonText}>💾 Save Trip</Text>
+              <Text style={styles.buttonText}>
+                {isEditMode ? 'Update Trip' : 'Save Trip'}
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

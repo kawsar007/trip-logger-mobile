@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { COLORS } from '../theme/colors';
 
 type Props = {
-  // onEdit: () => void;
+  onEdit: () => void;
   onDelete: () => void;
 }
 
-export default function TripActions({ onDelete }: Props) {
+export default function TripActions({ onEdit, onDelete }: Props) {
   const confirmDelete = () => {
     Alert.alert(
       'Delete Trip',
@@ -25,10 +26,10 @@ export default function TripActions({ onDelete }: Props) {
 
   return (
     <View style={styles.container}>
-      {/* <TouchableOpacity onPress={onEdit} style={styles.button}>
-        <Ionicons name="pencil" size={20} color={COLORS.primary} />
-      </TouchableOpacity> */}
 
+      <TouchableOpacity onPress={onEdit} style={styles.button}>
+        <Ionicons name="pencil" size={20} color={COLORS.primary} />
+      </TouchableOpacity>
       <TouchableOpacity onPress={confirmDelete} style={styles.button}>
         <Ionicons name="trash" size={20} color="#dc3545" />
       </TouchableOpacity>
@@ -44,5 +45,7 @@ const styles = StyleSheet.create({
   },
   button: {
     padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
   },
 });
