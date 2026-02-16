@@ -4,7 +4,7 @@
     "slug": "trip-logger",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/gps-tracking.jpg",
+    "icon": "./assets/reham.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
