@@ -295,7 +295,7 @@ export default function TripsScreen() {
                         </Text>
                       </View>
                       <TripActions
-                        onEdit={() => navigation.navigate('AddTrip', { tripId: trip.id })}
+                        onEdit={() => navigation.navigate('EditTrip', { tripId: trip.id })}
                         onDelete={() => handleDelete(trip.id)}
                       />
                     </View>

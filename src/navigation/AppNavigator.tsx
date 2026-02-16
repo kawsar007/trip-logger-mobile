@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import AddTripScreen from '../screens/AddTripScreen';
+import EditTripScreen from '../screens/EditTripScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ProfileSetupScreen from '../screens/ProfileSetupScreen';
 import TripsScreen from '../screens/TripsScreen';
@@ -48,6 +49,11 @@ export default function AppNavigator({ hasProfile }: { hasProfile: boolean }) {
       >
         <Stack.Screen name="Setup" component={ProfileSetupScreen} />
         <Stack.Screen name="Main" component={MainTabs} />
+        <Stack.Screen
+          name="EditTrip"
+          component={EditTripScreen}
+          options={{ title: 'Edit Trip' }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
