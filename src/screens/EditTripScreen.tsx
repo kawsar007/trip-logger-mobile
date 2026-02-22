@@ -207,7 +207,7 @@ export default function EditTripScreen() {
     const distanceNum = parseFloat(trip.distance.toString());
 
     if (!trip.startDestination || !trip.endDestination || isNaN(distanceNum) ||
-      distanceNum <= 0 || !trip.startTravelTime || !trip.endTravelTime || !trip.time) {
+      distanceNum < 0 || !trip.startTravelTime || !trip.endTravelTime || !trip.time) {
       Alert.alert('Missing Fields', 'Please fill all required fields including both times.');
       return;
     }
@@ -392,13 +392,13 @@ export default function EditTripScreen() {
 
             {/* Time Fields */}
             <View>
-              <Text style={styles.label}>Start Time *</Text>
+              <Text style={styles.label}>Start Time (GMT) *</Text>
               <TouchableOpacity
                 style={styles.timeButton}
                 onPress={() => setShowStartPicker(true)}
               >
                 <Text style={styles.timeText}>
-                  {trip.startTravelTime || 'Select start time'}
+                  {trip.startTravelTime ? `${trip.startTravelTime} GMT` : 'Select start time'}
                 </Text>
               </TouchableOpacity>
 
@@ -412,13 +412,13 @@ export default function EditTripScreen() {
                 />
               )}
 
-              <Text style={styles.label}>End Time *</Text>
+              <Text style={styles.label}>End Time (GMT) *</Text>
               <TouchableOpacity
                 style={styles.timeButton}
                 onPress={() => setShowEndPicker(true)}
               >
                 <Text style={styles.timeText}>
-                  {trip.endTravelTime || 'Select end time'}
+                  {trip.endTravelTime ? `${trip.endTravelTime} GMT` : 'Select end time'}
                 </Text>
               </TouchableOpacity>
 
