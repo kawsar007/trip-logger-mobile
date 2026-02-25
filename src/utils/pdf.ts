@@ -31,7 +31,7 @@ export const exportToPDF = async (profile: Profile, trips: Trip[]) => {
       grandMinutes += dayMinutes;
 
       // Day header row (now colspan=8 because we added one more column)
-      tripRows += `<tr><td colspan="8" style="background:#f0f0f0; font-weight:bold;">${formatDate(date)} — ${dayDistance} miles, ${minutesToTime(dayMinutes)}</td></tr>`;
+      tripRows += `<tr><td colspan="8" style="background:#f0f0f0; font-weight:bold;">${formatDate(date)} — ${dayDistance.toFixed(2)} miles, ${formatTravelTime(minutesToTime(dayMinutes))}</td></tr>`;
 
       dayTrips.forEach(t => {
         tripRows += `
@@ -85,7 +85,7 @@ export const exportToPDF = async (profile: Profile, trips: Trip[]) => {
           ${tripRows}
           <tr>
             <td colspan="8" class="grand-total">
-              GRAND TOTAL: ${grandDistance} Miles — ${minutesToTime(grandMinutes)} Hours
+              GRAND TOTAL: ${grandDistance.toFixed(2)} Miles — ${minutesToTime(grandMinutes)} Hours
             </td>
           </tr>
         </tbody>

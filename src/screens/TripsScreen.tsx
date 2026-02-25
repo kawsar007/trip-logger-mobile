@@ -275,7 +275,7 @@ export default function TripsScreen() {
                       {totalMiles.toFixed(1)} mi
                     </Text>
                     <Text style={styles.subTotalTime}>
-                      {minutesToTime(totalMinutes)}
+                      {formatTravelTime(minutesToTime(totalMinutes))}
                     </Text>
                   </View>
                 </View>
@@ -314,7 +314,7 @@ export default function TripsScreen() {
                       <View style={styles.tripRow}>
                         <Ionicons name="car-outline" size={16} color="#666" />
                         <Text style={styles.tripLabel}>Distance:</Text>
-                        <Text style={styles.tripValue}>{trip.distance} miles</Text>
+                        <Text style={styles.tripValue}>{trip.distance.toFixed(2)} miles</Text>
                       </View>
 
                       {/* <View style={styles.tripRow}>
@@ -359,7 +359,7 @@ export default function TripsScreen() {
             <View style={styles.grandTotalDetails}>
               <View style={styles.grandTotalItem}>
                 <Text style={styles.grandTotalLabel}>Distance</Text>
-                <Text style={styles.grandValue}>{grandMiles.toFixed(1)} Miles</Text>
+                <Text style={styles.grandValue}>{grandMiles.toFixed(2)} Miles</Text>
               </View>
               <View style={styles.grandTotalDivider} />
               <View style={styles.grandTotalItem}>
