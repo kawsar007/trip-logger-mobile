@@ -17,6 +17,9 @@ import { addTrip, getAllTrips } from '../db/database';
 import { COLORS } from '../theme/colors';
 import { Trip } from '../types';
 
+type DestinationMeta = { name: string; postal?: string };
+type RouteMeta = { start: string; end: string; distance: number };
+
 export default function AddTripScreen() {
   const navigation = useNavigation();
   const [trip, setTrip] = useState<Trip>({
@@ -36,9 +39,10 @@ export default function AddTripScreen() {
   const [startSuggestions, setStartSuggestions] = useState<string[]>([]);
   const [endSuggestions, setEndSuggestions] = useState<string[]>([]);
   const [allDestinations, setAllDestinations] = useState<{
-    starts: string[];
-    ends: string[];
-  }>({ starts: [], ends: [] });
+    starts: DestinationMeta[];
+    ends: DestinationMeta[];
+    routes: RouteMeta[];
+  }>({ starts: [], ends: [], routes: [] });
   const [showStartSuggestions, setShowStartSuggestions] = useState(false);
   const [showEndSuggestions, setShowEndSuggestions] = useState(false);
 
@@ -153,22 +157,92 @@ export default function AddTripScreen() {
   const loadDestinations = async () => {
     try {
       const trips = await getAllTrips();
-      const starts = [...new Set(trips.map((t) => t.startDestination).filter(Boolean))];
-      const ends = [...new Set(trips.map((t) => t.endDestination).filter(Boolean))];
-      setAllDestinations({ starts, ends });
+
+      // Build unique starts: keep the most recent postal for each destination name
+      const startMap = new Map<string, string>();
+      trips.forEach((t) => {
+        if (t.startDestination && !startMap.has(t.startDestination)) {
+          startMap.set(t.startDestination, t.startPostal || '');
+        }
+      });
+      const starts = Array.from(startMap.entries()).map(([name, postal]) => ({ name, postal }));
+
+      // Build unique ends
+      const endMap = new Map<string, string>();
+      trips.forEach((t) => {
+        if (t.endDestination && !endMap.has(t.endDestination)) {
+          endMap.set(t.endDestination, t.endPostal || '');
+        }
+      });
+      const ends = Array.from(endMap.entries()).map(([name, postal]) => ({ name, postal }));
+
+      // Build route map: key = "start||end", value = most recent distance
+      const routeMap = new Map<string, string>();
+      trips.forEach((t) => {
+        const key = `${t.startDestination}||${t.endDestination}`;
+        if (!routeMap.has(key)) {
+          routeMap.set(key, t.distance?.toString() || '');
+        }
+      });
+      const routes = Array.from(routeMap.entries()).map(([key, distance]) => {
+        const [start, end] = key.split('||');
+        return { start, end, distance };
+      });
+
+      setAllDestinations({ starts, ends, routes });
     } catch (error) {
       console.error('Error loading destinations:', error);
     }
   };
 
-  const handleChange = (field: keyof Trip, value: string | number) => {
-    setTrip((prev) => ({ ...prev, [field]: value }));
+  // Helper: try to auto-fill distance when both destinations are known
+  const tryAutoFillDistance = (startDest: string, endDest: string) => {
+    const key = `${startDest}||${endDest}`;
+    const route = allDestinations.routes.find(
+      (r) => `${r.start}||${r.end}` === key
+    );
+    if (route?.distance) {
+      setTrip((prev) => ({ ...prev, distance: route.distance }));
+    }
+  };
 
+  const handleChange = (field: keyof Trip, value: string | number) => {
+    setTrip((prev) => {
+      const updated = { ...prev, [field]: value };
+
+      // Auto-fill start postal when start destination changes
+      if (field === 'startDestination' && typeof value === 'string') {
+        const exactMatch = allDestinations.starts.find(
+          (d) => d.name.toLowerCase() === value.toLowerCase()
+        );
+        if (exactMatch?.postal) updated.startPostal = exactMatch.postal;
+        // Try auto-fill distance with existing end destination
+        const routeKey = `${value}||${prev.endDestination}`;
+        const route = allDestinations.routes.find((r) => `${r.start}||${r.end}` === routeKey);
+        if (route?.distance) updated.distance = route.distance;
+      }
+
+      // Auto-fill end postal when end destination changes
+      if (field === 'endDestination' && typeof value === 'string') {
+        const exactMatch = allDestinations.ends.find(
+          (d) => d.name.toLowerCase() === value.toLowerCase()
+        );
+        if (exactMatch?.postal) updated.endPostal = exactMatch.postal;
+        // Try auto-fill distance with existing start destination
+        const routeKey = `${prev.startDestination}||${value}`;
+        const route = allDestinations.routes.find((r) => `${r.start}||${r.end}` === routeKey);
+        if (route?.distance) updated.distance = route.distance;
+      }
+
+      return updated;
+    });
+
+    // Suggestion filtering (unchanged logic, just adapted for new data shape)
     if (field === 'startDestination' && typeof value === 'string') {
       if (value.length > 0) {
-        const filtered = allDestinations.starts.filter((dest) =>
-          dest.toLowerCase().includes(value.toLowerCase())
-        );
+        const filtered = allDestinations.starts
+          .filter((d) => d.name.toLowerCase().includes(value.toLowerCase()))
+          .map((d) => d.name);
         setStartSuggestions(filtered);
         setShowStartSuggestions(filtered.length > 0);
       } else {
@@ -178,9 +252,9 @@ export default function AddTripScreen() {
 
     if (field === 'endDestination' && typeof value === 'string') {
       if (value.length > 0) {
-        const filtered = allDestinations.ends.filter((dest) =>
-          dest.toLowerCase().includes(value.toLowerCase())
-        );
+        const filtered = allDestinations.ends
+          .filter((d) => d.name.toLowerCase().includes(value.toLowerCase()))
+          .map((d) => d.name);
         setEndSuggestions(filtered);
         setShowEndSuggestions(filtered.length > 0);
       } else {
@@ -190,12 +264,28 @@ export default function AddTripScreen() {
   };
 
   const selectStartSuggestion = (suggestion: string) => {
-    setTrip((prev) => ({ ...prev, startDestination: suggestion }));
+    const meta = allDestinations.starts.find((d) => d.name === suggestion);
+    setTrip((prev) => {
+      const updated = { ...prev, startDestination: suggestion };
+      if (meta?.postal) updated.startPostal = meta.postal;
+      const routeKey = `${suggestion}||${prev.endDestination}`;
+      const route = allDestinations.routes.find((r) => `${r.start}||${r.end}` === routeKey);
+      if (route?.distance) updated.distance = route.distance;
+      return updated;
+    });
     setShowStartSuggestions(false);
   };
 
   const selectEndSuggestion = (suggestion: string) => {
-    setTrip((prev) => ({ ...prev, endDestination: suggestion }));
+    const meta = allDestinations.ends.find((d) => d.name === suggestion);
+    setTrip((prev) => {
+      const updated = { ...prev, endDestination: suggestion };
+      if (meta?.postal) updated.endPostal = meta.postal;
+      const routeKey = `${prev.startDestination}||${suggestion}`;
+      const route = allDestinations.routes.find((r) => `${r.start}||${r.end}` === routeKey);
+      if (route?.distance) updated.distance = route.distance;
+      return updated;
+    });
     setShowEndSuggestions(false);
   };
 
